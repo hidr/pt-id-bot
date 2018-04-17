@@ -1,12 +1,12 @@
-const handlePullRequestChange = require('../../../lib/handle-pull-request-change')
+const handlePullRequestChange = require("../../../lib/handle-pull-request-change");
 
-describe('handlePullRequestChange', () => {
+describe("handlePullRequestChange", () => {
   const createMockContext = prTitle => {
     return {
       repo: jest.fn(),
       payload: {
         pull_request: {
-          head: { sha: 'sha' },
+          head: { sha: "sha" },
           title: prTitle
         },
         repository: {
@@ -24,112 +24,77 @@ describe('handlePullRequestChange', () => {
           getIssueLabels: jest.fn().mockReturnValue({ data: [] })
         }
       }
-    }
-  }
+    };
+  };
 
   const createMockCommitContext = commitMessage => {
-    const context = createMockContext('Example PR title')
+    const context = createMockContext("Example PR title");
 
     context.github.pullRequests.getCommits = jest.fn().mockReturnValue({
       data: [{ commit: { message: commitMessage } }]
-    })
+    });
 
-    return context
-  }
+    return context;
+  };
 
   const createMockLabelContext = labelName => {
-    const context = createMockContext('Example PR title')
+    const context = createMockContext("Example PR title");
 
     context.github.issues.getIssueLabels = jest.fn().mockReturnValue({
       data: [{ name: labelName }]
-    })
+    });
 
-    return context
-  }
+    return context;
+  };
 
-  const pendingStatusObject = {
-    context: 'WIP',
-    description: 'work in progress – do not merge!',
-    sha: 'sha',
-    state: 'pending',
-    target_url: 'https://github.com/apps/wip'
-  }
+  const failureStatusObject = {
+    context: "ID",
+    description: "does not have an ID - do not merge!",
+    sha: "sha",
+    state: "failure",
+    target_url: "https://github.com/apps/id-bot"
+  };
 
   const successStatusObject = {
-    context: 'WIP',
-    description: 'ready for review',
-    sha: 'sha',
-    state: 'success',
-    target_url: 'https://github.com/apps/wip'
-  }
+    context: "ID",
+    description: "ready for review",
+    sha: "sha",
+    state: "success",
+    target_url: "https://github.com/apps/id-bot"
+  };
 
-  it('creates pending status if PR title contains `wip`', async () => {
-    const context = createMockContext('[wip] foo bar commit message')
-    await handlePullRequestChange(context)
+  it("creates failure status if PR title does not contain ID", async () => {
+    const context = createMockContext("foo bar commit message");
+    await handlePullRequestChange(context);
 
-    expect(context.repo).lastCalledWith(pendingStatusObject)
-  })
+    expect(context.repo).lastCalledWith(failureStatusObject);
+  });
 
-  it('creates pending status if PR title contains `WIP`', async () => {
-    const context = createMockContext('foo WIP bar commit message')
-    await handlePullRequestChange(context)
+  it("creates success status if PR title contains ID", async () => {
+    const context = createMockContext("#123: foo bar commit message");
+    await handlePullRequestChange(context);
 
-    expect(context.repo).lastCalledWith(pendingStatusObject)
-  })
+    expect(context.repo).lastCalledWith(successStatusObject);
+  });
 
-  it('creates pending status if PR title contains `do not merge` case insensitive', async () => {
-    const context = createMockContext('foo dO NoT mERGe bar commit message')
-    await handlePullRequestChange(context)
+  it("creates success status if PR title contains ID surrounded by braces", async () => {
+    const context = createMockContext("[#123] foo bar commit message");
+    await handlePullRequestChange(context);
 
-    expect(context.repo).lastCalledWith(pendingStatusObject)
-  })
+    expect(context.repo).lastCalledWith(successStatusObject);
+  });
 
-  it('creates success status if PR title does NOT contain `wip`', async () => {
-    const context = createMockContext('[xxx] foo bar commit message')
-    await handlePullRequestChange(context)
+  it("creates success status if PR title contains ID surrounded by braces and spaces", async () => {
+    const context = createMockContext("[ #123 ] foo bar commit message");
+    await handlePullRequestChange(context);
 
-    expect(context.repo).lastCalledWith(successStatusObject)
-  })
+    expect(context.repo).lastCalledWith(successStatusObject);
+  });
 
-  it('creates pending status if a commit message contains `wip`', async () => {
-    const context = createMockCommitContext('[wip] foo bar commit message')
-    await handlePullRequestChange(context)
+  it("creates success status if PR title contains multiple IDs surrounded by braces", async () => {
+    const context = createMockContext("[#123, #456] foo bar commit message");
+    await handlePullRequestChange(context);
 
-    expect(context.repo).lastCalledWith(pendingStatusObject)
-  })
-
-  it('creates pending status if a commit message contains `do not merge`', async () => {
-    const context = createMockCommitContext('my DO NOT MERGE commit message')
-    await handlePullRequestChange(context)
-
-    expect(context.repo).lastCalledWith(pendingStatusObject)
-  })
-
-  it('creates success status if a commit message does not contain `wip` or `do not merge`', async () => {
-    const context = createMockCommitContext('my commit message')
-    await handlePullRequestChange(context)
-
-    expect(context.repo).lastCalledWith(successStatusObject)
-  })
-
-  it('creates pending status if a label contains `wip`', async () => {
-    const context = createMockLabelContext('WIP')
-    await handlePullRequestChange(context)
-
-    expect(context.repo).lastCalledWith(pendingStatusObject)
-  })
-
-  it('creates pending status if a label contains `do not merge`', async () => {
-    const context = createMockLabelContext('do not merge')
-    await handlePullRequestChange(context)
-
-    expect(context.repo).lastCalledWith(pendingStatusObject)
-  })
-
-  it('creates success status if a label does not contain `wip` or `do not merge`', async () => {
-    const context = createMockLabelContext('bug')
-    await handlePullRequestChange(context)
-
-    expect(context.repo).lastCalledWith(successStatusObject)
-  })
-})
+    expect(context.repo).lastCalledWith(successStatusObject);
+  });
+});
