@@ -3,7 +3,10 @@
   "version": "0.0.0-development",
   "description": "",
   "main": "index.js",
-  "files": ["index.js", "lib"],
+  "files": [
+    "index.js",
+    "lib"
+  ],
   "scripts": {
     "start": "probot run ./index.js",
     "test": "jest",
@@ -11,13 +14,21 @@
     "semantic-release": "semantic-release"
   },
   "standard": {
-    "globals": ["jest", "it", "expect", "describe"]
+    "globals": [
+      "jest",
+      "it",
+      "expect",
+      "describe"
+    ]
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/hidr/id-bot.git"
   },
-  "keywords": ["probot", "probot-plugin"],
+  "keywords": [
+    "probot",
+    "probot-plugin"
+  ],
   "author": "Gregor Martynus (https://github.com/hidr)",
   "license": "Apache-2.0",
   "bugs": {
@@ -25,7 +36,8 @@
   },
   "homepage": "https://github.com/hidr/id-bot#readme",
   "dependencies": {
-    "probot": "^6.0.0"
+    "probot": "^6.0.0",
+    "uuid": "^3.2.1"
   },
   "jest": {
     "testRegex": "/test/unit/.+\\.test\\.js$"
